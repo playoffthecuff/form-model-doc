@@ -17,7 +17,7 @@ function Root() {
           activeOptions={{ exact: true }}
         >
           Home
-        </Link>{' '}
+        </Link>
         <Link
           to="/constructor"
           activeProps={{
@@ -25,6 +25,14 @@ function Root() {
           }}
         >
           About
+        </Link>
+        <Link
+          to="/text"
+          activeProps={{
+            className: 'font-bold',
+          }}
+        >
+          Text
         </Link>
       </div>
       <hr />
