@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Switch } from "../components/ui/switch";
+import Smea from "../components/test-form/test-mest";
 
 export const Route = createFileRoute("/constructor")({
   component: Constructor,
@@ -19,7 +20,7 @@ function Constructor() {
   return (
     <div className="flex">
       <div className="p-4 text-lg w-1/2"/>
-
+      <Smea items={0}/>
       <div className="p-4 text-lg w-1/2">
         <Checkbox />
         <Input placeholder="Text..." />

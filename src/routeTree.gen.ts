@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TextImport } from './routes/text'
+import { Route as FormImport } from './routes/form'
 import { Route as ConstructorImport } from './routes/constructor'
 import { Route as IndexImport } from './routes/index'
 
@@ -20,6 +21,12 @@ import { Route as IndexImport } from './routes/index'
 const TextRoute = TextImport.update({
   id: '/text',
   path: '/text',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const FormRoute = FormImport.update({
+  id: '/form',
+  path: '/form',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -53,6 +60,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConstructorImport
       parentRoute: typeof rootRoute
     }
+    '/form': {
+      id: '/form'
+      path: '/form'
+      fullPath: '/form'
+      preLoaderRoute: typeof FormImport
+      parentRoute: typeof rootRoute
+    }
     '/text': {
       id: '/text'
       path: '/text'
@@ -68,12 +82,14 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/constructor': typeof ConstructorRoute
+  '/form': typeof FormRoute
   '/text': typeof TextRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/constructor': typeof ConstructorRoute
+  '/form': typeof FormRoute
   '/text': typeof TextRoute
 }
 
@@ -81,27 +97,30 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/constructor': typeof ConstructorRoute
+  '/form': typeof FormRoute
   '/text': typeof TextRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/constructor' | '/text'
+  fullPaths: '/' | '/constructor' | '/form' | '/text'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/constructor' | '/text'
-  id: '__root__' | '/' | '/constructor' | '/text'
+  to: '/' | '/constructor' | '/form' | '/text'
+  id: '__root__' | '/' | '/constructor' | '/form' | '/text'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConstructorRoute: typeof ConstructorRoute
+  FormRoute: typeof FormRoute
   TextRoute: typeof TextRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConstructorRoute: ConstructorRoute,
+  FormRoute: FormRoute,
   TextRoute: TextRoute,
 }
 
@@ -117,6 +136,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/constructor",
+        "/form",
         "/text"
       ]
     },
@@ -125,6 +145,9 @@ export const routeTree = rootRoute
     },
     "/constructor": {
       "filePath": "constructor.tsx"
+    },
+    "/form": {
+      "filePath": "form.tsx"
     },
     "/text": {
       "filePath": "text.tsx"

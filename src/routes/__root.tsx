@@ -34,6 +34,14 @@ function Root() {
         >
           Text
         </Link>
+        <Link
+          to="/form"
+          activeProps={{
+            className: 'font-bold',
+          }}
+        >
+          Form
+        </Link>
       </div>
       <hr />
       <Outlet />

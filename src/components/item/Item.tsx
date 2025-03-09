@@ -1,11 +1,13 @@
-import React, {useEffect} from 'react';
-import type {DraggableSyntheticListeners} from '@dnd-kit/core';
-import type {Transform} from '@dnd-kit/utilities';
+import type { DraggableSyntheticListeners } from "@dnd-kit/core";
+import type { Transform } from "@dnd-kit/utilities";
+import React, { useEffect } from "react";
 
-import {Handle, Remove} from './components';
+import { Handle, Remove } from "./components";
 
-import styles from './Item.module.css';
-import clsx from 'clsx';
+import clsx from "clsx";
+import { X } from "lucide-react";
+import { Button } from "../ui/button";
+import styles from "./Item.module.css";
 
 export interface Props {
   dragOverlay?: boolean;
@@ -32,17 +34,22 @@ export interface Props {
     sorting: boolean;
     index: number | undefined;
     fadeIn: boolean;
+    handle?: boolean;
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    handleProps?: any;
+    onRemove?(): void;
     listeners: DraggableSyntheticListeners;
     ref: React.Ref<HTMLElement>;
     style: React.CSSProperties | undefined;
-    transform: Props['transform'];
-    transition: Props['transition'];
-    value: Props['value'];
+    transform: Props["transform"];
+    transition: Props["transition"];
+    value: Props["value"];
   }): React.ReactElement;
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export type RenderItem = NonNullable<Props["renderItem"]> extends (args: infer A) => any ? A : never;
+export type RenderItem =
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  NonNullable<Props["renderItem"]> extends (args: infer A) => any ? A : never;
 
 export const Item = React.memo(
   React.forwardRef<HTMLLIElement, Props>(
@@ -74,28 +81,29 @@ export const Item = React.memo(
         if (!dragOverlay) {
           return;
         }
-        console.log(dragOverlay)
-        document.body.style.cursor = 'grabbing';
+        document.body.style.cursor = "grabbing";
 
         return () => {
-          document.body.style.cursor = '';
+          document.body.style.cursor = "";
         };
       }, [dragOverlay]);
 
-      return renderItem ? (
-        renderItem({
-          dragOverlay: Boolean(dragOverlay),
-          dragging: Boolean(dragging),
-          sorting: Boolean(sorting),
-          index,
-          fadeIn: Boolean(fadeIn),
-          listeners,
-          ref,
-          style,
-          transform,
-          transition,
-          value,
-        })
+      return renderItem ? (renderItem({
+              dragOverlay: Boolean(dragOverlay),
+              dragging: Boolean(dragging),
+              sorting: Boolean(sorting),
+              index,
+              fadeIn: Boolean(fadeIn),
+              listeners,
+              handleProps,
+              handle,
+              onRemove,
+              ref,
+              style,
+              transform,
+              transition,
+              value,
+            })
       ) : (
         <li
           className={clsx(
@@ -109,21 +117,21 @@ export const Item = React.memo(
               ...wrapperStyle,
               transition: [transition, wrapperStyle?.transition]
                 .filter(Boolean)
-                .join(', '),
-              '--translate-x': transform
+                .join(", "),
+              "--translate-x": transform
                 ? `${Math.round(transform.x)}px`
                 : undefined,
-              '--translate-y': transform
+              "--translate-y": transform
                 ? `${Math.round(transform.y)}px`
                 : undefined,
-              '--scale-x': transform?.scaleX
+              "--scale-x": transform?.scaleX
                 ? `${transform.scaleX}`
                 : undefined,
-              '--scale-y': transform?.scaleY
+              "--scale-y": transform?.scaleY
                 ? `${transform.scaleY}`
                 : undefined,
-              '--index': index,
-              '--color': color,
+              "--index": index,
+              "--color": color,
             } as React.CSSProperties
           }
           ref={ref}
@@ -145,6 +153,9 @@ export const Item = React.memo(
           >
             {value}
             <span className={styles.Actions}>
+              <Button size="icon" variant="outline" onClick={onRemove}>
+                <X />
+              </Button>
               {onRemove ? (
                 <Remove className={styles.Remove} onClick={onRemove} />
               ) : null}

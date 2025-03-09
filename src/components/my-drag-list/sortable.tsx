@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-
 import {
   type Active,
   type Announcements,
@@ -31,12 +30,12 @@ import {
   arrayMove,
   rectSortingStrategy,
   sortableKeyboardCoordinates,
-  useSortable,
 } from "@dnd-kit/sortable";
 import { createRange } from "../../lib/utilities";
 import { Item } from "../item/Item";
 import { List } from "../list";
 import { Wrapper } from "../wrapper";
+import { SortableItem } from "./sortable-item";
 
 export interface Props {
   activationConstraint?: PointerActivationConstraint;
@@ -50,7 +49,6 @@ export interface Props {
   getNewIndex?: NewIndexGetter;
   handle?: boolean;
   itemCount?: number;
-  items?: UniqueIdentifier[];
   measuring?: MeasuringConfiguration;
   modifiers?: Modifiers;
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -76,6 +74,8 @@ export interface Props {
   }): React.CSSProperties;
   isDisabled?(id: UniqueIdentifier): boolean;
 }
+
+export type WrapperStyle = Props["wrapperStyle"];
 
 const dropAnimationConfig: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -107,7 +107,6 @@ export function Sortable({
   getNewIndex,
   handle = false,
   itemCount = 16,
-  items: initialItems,
   isDisabled = () => false,
   measuring,
   modifiers,
@@ -120,8 +119,7 @@ export function Sortable({
   wrapperStyle = () => ({}),
 }: Props) {
   const [items, setItems] = useState<UniqueIdentifier[]>(
-    () =>
-      initialItems ?? createRange<UniqueIdentifier>(itemCount, (index) => index)
+    createRange<UniqueIdentifier>(itemCount, (index) => index)
   );
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const sensors = useSensors(
@@ -132,8 +130,7 @@ export function Sortable({
       activationConstraint,
     }),
     useSensor(KeyboardSensor, {
-      // Disable smooth scrolling in Cypress automated tests
-      scrollBehavior: "Cypress" in window ? "auto" : undefined,
+      scrollBehavior: undefined,
       coordinateGetter,
     })
   );
@@ -143,7 +140,9 @@ export function Sortable({
   const activeIndex = activeId != null ? getIndex(activeId) : -1;
   const handleRemove = removable
     ? (id: UniqueIdentifier) =>
-        setItems((items) => items.filter((item) => item !== id))
+        {setItems((items) => items.filter((item) => item !== id));
+          console.log("handle remove")
+        }
     : undefined;
   const announcements: Announcements = {
     onDragStart({ active: { id } }) {
@@ -277,83 +276,5 @@ export function Sortable({
           )
         : null}
     </DndContext>
-  );
-}
-
-interface SortableItemProps {
-  animateLayoutChanges?: AnimateLayoutChanges;
-  disabled?: boolean;
-  getNewIndex?: NewIndexGetter;
-  id: UniqueIdentifier;
-  index: number;
-  handle: boolean;
-  useDragOverlay?: boolean;
-  onRemove?(id: UniqueIdentifier): void;
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  style(values: any): React.CSSProperties;
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  renderItem?(args: any): React.ReactElement;
-  wrapperStyle: Props["wrapperStyle"];
-}
-
-export function SortableItem({
-  disabled,
-  animateLayoutChanges,
-  getNewIndex,
-  handle,
-  id,
-  index,
-  onRemove,
-  style,
-  renderItem,
-  useDragOverlay,
-  wrapperStyle,
-}: SortableItemProps) {
-  const {
-    active,
-    attributes,
-    isDragging,
-    isSorting,
-    listeners,
-    overIndex,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id,
-    animateLayoutChanges,
-    disabled,
-    getNewIndex,
-  });
-
-  return (
-    <Item
-      ref={setNodeRef}
-      value={id}
-      disabled={disabled}
-      dragging={isDragging}
-      sorting={isSorting}
-      handle={handle}
-      handleProps={handle ? { ref: setActivatorNodeRef } : undefined}
-      renderItem={renderItem}
-      index={index}
-      style={style({
-        index,
-        id,
-        isDragging,
-        isSorting,
-        overIndex,
-      })}
-      onRemove={onRemove ? () => onRemove(id) : undefined}
-      transform={transform}
-      transition={transition}
-      wrapperStyle={wrapperStyle?.({ index, isDragging, active, id })}
-      listeners={listeners}
-      data-index={index}
-      data-id={id}
-      dragOverlay={!useDragOverlay && isDragging}
-      {...attributes}
-    />
   );
 }
