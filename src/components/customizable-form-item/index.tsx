@@ -18,15 +18,16 @@ interface SelectData {
   defaultValue?: string;
   items: string[];
   placeholder?: string;
+  errorMessage?: string;
 }
 
 export interface SelectProps extends CommonProps, SelectData {}
 
-type Props =
+export type FormItemProps =
   | (CommonProps & { type: "checkbox" } & CheckBoxData)
   | (CommonProps & { type: "select" } & SelectData);
 
-export default function CustomizableFormItem(props: Props) {
+export default function CustomizableFormItem(props: FormItemProps) {
   const { type, id, label, disabled, className } = props;
   return (
     <div className={className}>

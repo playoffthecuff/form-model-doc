@@ -36,8 +36,9 @@ import { Item } from "../item/Item";
 import { List } from "../list";
 import { Wrapper } from "../wrapper";
 import { SortableItem } from "./sortable-item";
+import type { FormItemProps } from "../customizable-form-item";
 
-export interface Props {
+export interface Props<T> {
   activationConstraint?: PointerActivationConstraint;
   animateLayoutChanges?: AnimateLayoutChanges;
   adjustScale?: boolean;
@@ -49,6 +50,7 @@ export interface Props {
   getNewIndex?: NewIndexGetter;
   handle?: boolean;
   itemCount?: number;
+  items?: T[];
   measuring?: MeasuringConfiguration;
   modifiers?: Modifiers;
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -75,7 +77,7 @@ export interface Props {
   isDisabled?(id: UniqueIdentifier): boolean;
 }
 
-export type WrapperStyle = Props["wrapperStyle"];
+export type WrapperStyle = Props<null>["wrapperStyle"];
 
 const dropAnimationConfig: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -107,6 +109,7 @@ export function Sortable({
   getNewIndex,
   handle = false,
   itemCount = 16,
+  items: listItems,
   isDisabled = () => false,
   measuring,
   modifiers,
@@ -117,9 +120,9 @@ export function Sortable({
   style,
   useDragOverlay = true,
   wrapperStyle = () => ({}),
-}: Props) {
+}: Props<FormItemProps>) {
   const [items, setItems] = useState<UniqueIdentifier[]>(
-    createRange<UniqueIdentifier>(itemCount, (index) => index)
+    listItems ? createRange<UniqueIdentifier>(listItems.length, (index) => listItems[index].id) : createRange<UniqueIdentifier>(itemCount, (index) => index)
   );
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const sensors = useSensors(
@@ -140,8 +143,9 @@ export function Sortable({
   const activeIndex = activeId != null ? getIndex(activeId) : -1;
   const handleRemove = removable
     ? (id: UniqueIdentifier) =>
-        {setItems((items) => items.filter((item) => item !== id));
-          console.log("handle remove")
+        {
+          console.log(items, id);
+          setItems((items) => items.filter((item) => item !== id));
         }
     : undefined;
   const announcements: Announcements = {
@@ -223,15 +227,16 @@ export function Sortable({
       <Wrapper style={style} center>
         <SortableContext items={items} strategy={strategy}>
           <Container>
-            {items.map((value, index) => (
+            {items.map((id, index) => (
               <SortableItem
-                key={value}
-                id={value}
+                key={id}
+                id={id}
                 handle={handle}
                 index={index}
                 style={getItemStyles}
                 wrapperStyle={wrapperStyle}
-                disabled={isDisabled(value)}
+                disabled={isDisabled(id)}
+                itemData={listItems ? listItems.find(v => v.id === id) : undefined}
                 renderItem={renderItem}
                 onRemove={handleRemove}
                 animateLayoutChanges={animateLayoutChanges}
@@ -254,6 +259,7 @@ export function Sortable({
                   handle={handle}
                   renderItem={renderItem}
                   index={activeIndex}
+                  itemData={listItems ? listItems.find(v => v.id === items[activeIndex]) : undefined}
                   wrapperStyle={wrapperStyle({
                     active: { id: activeId },
                     index: activeIndex,

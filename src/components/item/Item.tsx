@@ -8,8 +8,9 @@ import clsx from "clsx";
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import styles from "./Item.module.css";
+import type { FormItemProps } from "../customizable-form-item";
 
-export interface Props {
+export interface Props<T> {
   dragOverlay?: boolean;
   color?: string;
   disabled?: boolean;
@@ -19,6 +20,7 @@ export interface Props {
   handleProps?: any;
   height?: number;
   index?: number;
+  itemData?: T;
   fadeIn?: boolean;
   transform?: Transform | null;
   listeners?: DraggableSyntheticListeners;
@@ -37,22 +39,23 @@ export interface Props {
     handle?: boolean;
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     handleProps?: any;
+    itemData?: T;
     onRemove?(): void;
     listeners: DraggableSyntheticListeners;
     ref: React.Ref<HTMLElement>;
     style: React.CSSProperties | undefined;
-    transform: Props["transform"];
-    transition: Props["transition"];
-    value: Props["value"];
+    transform: Props<null>["transform"];
+    transition: Props<null>["transition"];
+    value: Props<null>["value"];
   }): React.ReactElement;
 }
 
 export type RenderItem =
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  NonNullable<Props["renderItem"]> extends (args: infer A) => any ? A : never;
+  NonNullable<Props<FormItemProps>["renderItem"]> extends (args: infer A) => any ? A : never;
 
 export const Item = React.memo(
-  React.forwardRef<HTMLLIElement, Props>(
+  React.forwardRef<HTMLLIElement, Props<FormItemProps>>(
     (
       {
         color,
@@ -65,6 +68,7 @@ export const Item = React.memo(
         height,
         index,
         listeners,
+        itemData,
         onRemove,
         renderItem,
         sorting,
@@ -97,6 +101,7 @@ export const Item = React.memo(
               listeners,
               handleProps,
               handle,
+              itemData,
               onRemove,
               ref,
               style,
@@ -146,7 +151,6 @@ export const Item = React.memo(
               color && styles.color
             )}
             style={style}
-            data-cypress="draggable-item"
             {...(!handle ? listeners : undefined)}
             {...props}
             tabIndex={!handle ? 0 : undefined}

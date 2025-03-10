@@ -8,13 +8,15 @@ import {
 } from "@dnd-kit/sortable";
 import type { WrapperStyle } from "./sortable";
 import { Item } from "../item/Item";
+import type { FormItemProps } from "../customizable-form-item";
 
-interface SortableItemProps {
+interface SortableItemProps<T> {
   animateLayoutChanges?: AnimateLayoutChanges;
   disabled?: boolean;
   getNewIndex?: NewIndexGetter;
   id: UniqueIdentifier;
   index: number;
+  itemData?: T;
   handle: boolean;
   useDragOverlay?: boolean;
   onRemove?(id: UniqueIdentifier): void;
@@ -32,12 +34,13 @@ export function SortableItem({
   handle,
   id,
   index,
+  itemData,
   onRemove,
   style,
   renderItem,
   useDragOverlay,
   wrapperStyle,
-}: SortableItemProps) {
+}: SortableItemProps<FormItemProps>) {
   const {
     active,
     attributes,
@@ -67,6 +70,7 @@ export function SortableItem({
       handleProps={handle ? { ref: setActivatorNodeRef } : undefined}
       renderItem={renderItem}
       index={index}
+      itemData={itemData}
       style={style({
         index,
         id,

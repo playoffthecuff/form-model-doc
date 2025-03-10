@@ -1,5 +1,11 @@
-import { GripVertical, X } from "lucide-react";
+import clsx from "clsx";
+import { GripVertical, Pencil, Save } from "lucide-react";
+import { useState } from "react";
+import { cn } from "../../lib/utils";
+import { ConfirmDialog } from "../confirm-dialog";
+import CustomizableFormItem from "../customizable-form-item";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import type { RenderItem } from "./Item";
 
 export const renderItem: (args: RenderItem) => React.ReactElement = ({
@@ -8,6 +14,7 @@ export const renderItem: (args: RenderItem) => React.ReactElement = ({
   index,
   fadeIn,
   onRemove,
+  itemData,
   listeners,
   ref,
   style,
@@ -15,7 +22,10 @@ export const renderItem: (args: RenderItem) => React.ReactElement = ({
   transition,
   value,
 }) => {
-
+  const [editMode, setEditMode] = useState(false);
+  const toggleMode = () => setEditMode(!editMode);
+  const [label, setLabel] = useState(itemData?.label);
+  const handleLabelChange = (v: string) => setLabel(v);
   return (
     <div
       ref={ref as React.Ref<HTMLDivElement>}
@@ -26,20 +36,50 @@ export const renderItem: (args: RenderItem) => React.ReactElement = ({
           ? `translate(${transform.x}px, ${transform.y}px)`
           : undefined,
         transition: transition ?? undefined,
-        background: dragOverlay ? "gainsboro" : "white",
-        padding: "8px",
-        border: "1px solid #ccc",
-        height: 56 + 2 * (index ?? 0),
       }}
-      className="flex gap-2 items-center"
+      className="flex gap-4 p-2 border rounded-md bg-background"
     >
-      <div className="flex-1">{value}</div>
-      <Button size="icon" variant="outline" onClick={onRemove}>
-        <X />
-      </Button>
-      <Button size="icon" variant="outline" className="active:cursor-grabbing" {...listeners}>
-        <GripVertical />
-      </Button>
+      <div className="flex-1 flex flex-col gap-4">
+        {itemData && <CustomizableFormItem {...itemData} />}
+        {editMode && <Input onChange={handleLabelChange} />}
+      </div>
+      <div className="flex flex-col gap-2">
+        <ConfirmDialog
+          question="r u sure?"
+          description="it removing item from the list"
+          handleConfirm={onRemove}
+        />
+        <Button
+          size="icon"
+          variant="outline"
+          className="active:cursor-grabbing grid justify-center items-center"
+          style={{ gridTemplateAreas: `"stack"` }}
+          onClick={toggleMode}
+        >
+          <Pencil
+            style={{ gridArea: "stack" }}
+            className={cn(
+              "scale-100 opacity-100 transition-all duration-200",
+              editMode && "scale-0 opacity-0"
+            )}
+          />
+          <Save
+            style={{ gridArea: "stack" }}
+            className={clsx(
+              "scale-0 opacity-0 transition-all duration-200",
+              editMode && "scale-100 opacity-100"
+            )}
+          />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          className="active:cursor-grabbing"
+          {...listeners}
+        >
+          <GripVertical />
+        </Button>
+      </div>
     </div>
   );
 };

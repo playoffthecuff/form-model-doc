@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import type { SelectProps } from ".";
 import {
   Select,
@@ -14,12 +13,13 @@ const CustomizableSelect = ({
   placeholder,
   label,
   id,
+  errorMessage,
   disabled = false,
 }: SelectProps) => (
   <div>
     <label htmlFor={id}>{label}</label>
     <Select defaultValue={defaultValue} disabled={disabled}>
-      <SelectTrigger id={id}>
+      <SelectTrigger id={id} className="w-full">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -30,8 +30,7 @@ const CustomizableSelect = ({
         ))}
       </SelectContent>
     </Select>
-    You can manage email addresses in your{" "}
-    <Link to="/text">email settings</Link>
+    {errorMessage}
   </div>
 );
 
