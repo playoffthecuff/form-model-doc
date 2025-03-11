@@ -10,17 +10,9 @@ import {
 } from "@dnd-kit/sortable";
 import type { FormItemProps } from "../customizable-form-item";
 import { renderItem } from "../item/renderItem";
-import { Sortable } from "./sortable";
+import { Sortable } from "../my-drag-list/sortable";
 
-const items: FormItemProps[] = [
-  { type: "checkbox", id: "c1", label: "what 1" },
-  { type: "select", id: "s1", items: ["1", "2", "3"], label: "in some 1" },
-  { type: "checkbox", id: "c2", label: "what 2" },
-  { type: "checkbox", id: "c3", label: "what 3" },
-  { type: "select", id: "s2", items: ["4", "5", "6", "7"], label: "in some 2" },
-];
-
-export const MyDragList = () => {
+export const SourceDragItems = ({items}: {items: FormItemProps[]}) => {
   const animateLayoutChanges: AnimateLayoutChanges = (args) =>
     defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
@@ -31,7 +23,7 @@ export const MyDragList = () => {
       removable
       handle
       renderItem={renderItem}
-      modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+      modifiers={[restrictToWindowEdges]}
       itemCount={20}
       strategy={verticalListSortingStrategy}
       items={items}

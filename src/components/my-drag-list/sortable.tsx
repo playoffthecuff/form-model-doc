@@ -50,6 +50,7 @@ export interface Props<T> {
   getNewIndex?: NewIndexGetter;
   handle?: boolean;
   itemCount?: number;
+  editable?: boolean;
   items?: T[];
   measuring?: MeasuringConfiguration;
   modifiers?: Modifiers;
@@ -107,6 +108,7 @@ export function Sortable({
   dropAnimation = dropAnimationConfig,
   getItemStyles = () => ({}),
   getNewIndex,
+  editable,
   handle = false,
   itemCount = 16,
   items: listItems,
@@ -233,6 +235,7 @@ export function Sortable({
                 id={id}
                 handle={handle}
                 index={index}
+                editable={editable}
                 style={getItemStyles}
                 wrapperStyle={wrapperStyle}
                 disabled={isDisabled(id)}
@@ -259,6 +262,7 @@ export function Sortable({
                   handle={handle}
                   renderItem={renderItem}
                   index={activeIndex}
+                  editable={editable}
                   itemData={listItems ? listItems.find(v => v.id === items[activeIndex]) : undefined}
                   wrapperStyle={wrapperStyle({
                     active: { id: activeId },

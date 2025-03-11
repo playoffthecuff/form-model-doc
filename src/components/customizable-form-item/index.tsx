@@ -14,7 +14,7 @@ interface CheckBoxData {
 
 export interface CheckBoxProps extends CommonProps, CheckBoxData {}
 
-interface SelectData {
+interface SelectData{
   defaultValue?: string;
   items: string[];
   placeholder?: string;

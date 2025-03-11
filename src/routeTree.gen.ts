@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TextImport } from './routes/text'
+import { Route as TestsImport } from './routes/tests'
 import { Route as FormImport } from './routes/form'
 import { Route as ConstructorImport } from './routes/constructor'
 import { Route as IndexImport } from './routes/index'
@@ -21,6 +22,12 @@ import { Route as IndexImport } from './routes/index'
 const TextRoute = TextImport.update({
   id: '/text',
   path: '/text',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const TestsRoute = TestsImport.update({
+  id: '/tests',
+  path: '/tests',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -67,6 +74,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormImport
       parentRoute: typeof rootRoute
     }
+    '/tests': {
+      id: '/tests'
+      path: '/tests'
+      fullPath: '/tests'
+      preLoaderRoute: typeof TestsImport
+      parentRoute: typeof rootRoute
+    }
     '/text': {
       id: '/text'
       path: '/text'
@@ -83,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/constructor': typeof ConstructorRoute
   '/form': typeof FormRoute
+  '/tests': typeof TestsRoute
   '/text': typeof TextRoute
 }
 
@@ -90,6 +105,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/constructor': typeof ConstructorRoute
   '/form': typeof FormRoute
+  '/tests': typeof TestsRoute
   '/text': typeof TextRoute
 }
 
@@ -98,15 +114,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/constructor': typeof ConstructorRoute
   '/form': typeof FormRoute
+  '/tests': typeof TestsRoute
   '/text': typeof TextRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/constructor' | '/form' | '/text'
+  fullPaths: '/' | '/constructor' | '/form' | '/tests' | '/text'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/constructor' | '/form' | '/text'
-  id: '__root__' | '/' | '/constructor' | '/form' | '/text'
+  to: '/' | '/constructor' | '/form' | '/tests' | '/text'
+  id: '__root__' | '/' | '/constructor' | '/form' | '/tests' | '/text'
   fileRoutesById: FileRoutesById
 }
 
@@ -114,6 +131,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConstructorRoute: typeof ConstructorRoute
   FormRoute: typeof FormRoute
+  TestsRoute: typeof TestsRoute
   TextRoute: typeof TextRoute
 }
 
@@ -121,6 +139,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConstructorRoute: ConstructorRoute,
   FormRoute: FormRoute,
+  TestsRoute: TestsRoute,
   TextRoute: TextRoute,
 }
 
@@ -137,6 +156,7 @@ export const routeTree = rootRoute
         "/",
         "/constructor",
         "/form",
+        "/tests",
         "/text"
       ]
     },
@@ -148,6 +168,9 @@ export const routeTree = rootRoute
     },
     "/form": {
       "filePath": "form.tsx"
+    },
+    "/tests": {
+      "filePath": "tests.tsx"
     },
     "/text": {
       "filePath": "text.tsx"

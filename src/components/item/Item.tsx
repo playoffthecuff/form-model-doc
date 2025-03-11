@@ -12,7 +12,6 @@ import type { FormItemProps } from "../customizable-form-item";
 
 export interface Props<T> {
   dragOverlay?: boolean;
-  color?: string;
   disabled?: boolean;
   dragging?: boolean;
   handle?: boolean;
@@ -21,6 +20,7 @@ export interface Props<T> {
   height?: number;
   index?: number;
   itemData?: T;
+  editable?: boolean;
   fadeIn?: boolean;
   transform?: Transform | null;
   listeners?: DraggableSyntheticListeners;
@@ -37,6 +37,7 @@ export interface Props<T> {
     index: number | undefined;
     fadeIn: boolean;
     handle?: boolean;
+    editable?: boolean;
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     handleProps?: any;
     itemData?: T;
@@ -58,7 +59,6 @@ export const Item = React.memo(
   React.forwardRef<HTMLLIElement, Props<FormItemProps>>(
     (
       {
-        color,
         dragOverlay,
         dragging,
         disabled,
@@ -67,6 +67,7 @@ export const Item = React.memo(
         handleProps,
         height,
         index,
+        editable,
         listeners,
         itemData,
         onRemove,
@@ -101,6 +102,7 @@ export const Item = React.memo(
               listeners,
               handleProps,
               handle,
+              editable,
               itemData,
               onRemove,
               ref,
@@ -136,7 +138,6 @@ export const Item = React.memo(
                 ? `${transform.scaleY}`
                 : undefined,
               "--index": index,
-              "--color": color,
             } as React.CSSProperties
           }
           ref={ref}
@@ -148,7 +149,6 @@ export const Item = React.memo(
               handle && styles.withHandle,
               dragOverlay && styles.dragOverlay,
               disabled && styles.disabled,
-              color && styles.color
             )}
             style={style}
             {...(!handle ? listeners : undefined)}

@@ -1,6 +1,7 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { ThemeProvider } from "../components/theme-provider";
+import { ThemeToggler } from "../components/theme-toggler";
 
 export const Route = createRootRoute({
   component: Root,
@@ -44,6 +45,15 @@ function Root() {
           >
             Form
           </Link>
+          <Link
+            to="/tests"
+            activeProps={{
+              className: 'font-bold',
+            }}
+          >
+            Tests
+          </Link>
+          <ThemeToggler/>
         </div>
         <hr />
         <Outlet />

@@ -17,6 +17,7 @@ interface SortableItemProps<T> {
   id: UniqueIdentifier;
   index: number;
   itemData?: T;
+  editable?: boolean;
   handle: boolean;
   useDragOverlay?: boolean;
   onRemove?(id: UniqueIdentifier): void;
@@ -35,6 +36,7 @@ export function SortableItem({
   id,
   index,
   itemData,
+  editable,
   onRemove,
   style,
   renderItem,
@@ -67,6 +69,7 @@ export function SortableItem({
       dragging={isDragging}
       sorting={isSorting}
       handle={handle}
+      editable={editable}
       handleProps={handle ? { ref: setActivatorNodeRef } : undefined}
       renderItem={renderItem}
       index={index}

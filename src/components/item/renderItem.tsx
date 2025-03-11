@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { GripVertical, Pencil, Save } from "lucide-react";
-import { useState } from "react";
+import { type ChangeEventHandler, useState } from "react";
 import { cn } from "../../lib/utils";
 import { ConfirmDialog } from "../confirm-dialog";
 import CustomizableFormItem from "../customizable-form-item";
@@ -16,6 +16,7 @@ export const renderItem: (args: RenderItem) => React.ReactElement = ({
   onRemove,
   itemData,
   listeners,
+  editable,
   ref,
   style,
   transform,
@@ -25,7 +26,7 @@ export const renderItem: (args: RenderItem) => React.ReactElement = ({
   const [editMode, setEditMode] = useState(false);
   const toggleMode = () => setEditMode(!editMode);
   const [label, setLabel] = useState(itemData?.label);
-  const handleLabelChange = (v: string) => setLabel(v);
+  const handleLabelChange: ChangeEventHandler<HTMLInputElement> = (e) => setLabel(e.target.value);
   return (
     <div
       ref={ref as React.Ref<HTMLDivElement>}
@@ -44,33 +45,37 @@ export const renderItem: (args: RenderItem) => React.ReactElement = ({
         {editMode && <Input onChange={handleLabelChange} />}
       </div>
       <div className="flex flex-col gap-2">
-        <ConfirmDialog
-          question="r u sure?"
-          description="it removing item from the list"
-          handleConfirm={onRemove}
-        />
-        <Button
-          size="icon"
-          variant="outline"
-          className="active:cursor-grabbing grid justify-center items-center"
-          style={{ gridTemplateAreas: `"stack"` }}
-          onClick={toggleMode}
-        >
-          <Pencil
-            style={{ gridArea: "stack" }}
-            className={cn(
-              "scale-100 opacity-100 transition-all duration-200",
-              editMode && "scale-0 opacity-0"
-            )}
-          />
-          <Save
-            style={{ gridArea: "stack" }}
-            className={clsx(
-              "scale-0 opacity-0 transition-all duration-200",
-              editMode && "scale-100 opacity-100"
-            )}
-          />
-        </Button>
+        {editable && (
+          <>
+            <ConfirmDialog
+              question="r u sure?"
+              description="it removing item from the list"
+              handleConfirm={onRemove}
+            />
+            <Button
+              size="icon"
+              variant="outline"
+              className="active:cursor-grabbing grid justify-center items-center"
+              style={{ gridTemplateAreas: `"stack"` }}
+              onClick={toggleMode}
+            >
+              <Pencil
+                style={{ gridArea: "stack" }}
+                className={cn(
+                  "scale-100 opacity-100 transition-all duration-200",
+                  editMode && "scale-0 opacity-0"
+                )}
+              />
+              <Save
+                style={{ gridArea: "stack" }}
+                className={clsx(
+                  "scale-0 opacity-0 transition-all duration-200",
+                  editMode && "scale-100 opacity-100"
+                )}
+              />
+            </Button>
+          </>
+        )}
         <Button
           size="icon"
           variant="outline"

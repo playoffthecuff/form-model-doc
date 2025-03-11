@@ -1,4 +1,4 @@
-import React, {forwardRef} from 'react';
+import {forwardRef} from 'react';
 import classNames from 'classnames';
 
 import {Handle, Remove} from '../Item';
@@ -17,7 +17,6 @@ export interface Props {
   shadow?: boolean;
   placeholder?: boolean;
   unstyled?: boolean;
-  onClick?(): void;
   onRemove?(): void;
 }
 
@@ -29,7 +28,6 @@ export const Container = forwardRef<HTMLDivElement, Props>(
       handleProps,
       horizontal,
       hover,
-      onClick,
       onRemove,
       label,
       placeholder,
@@ -41,7 +39,7 @@ export const Container = forwardRef<HTMLDivElement, Props>(
     }: Props,
     ref
   ) => {
-    const Component = onClick ? 'button' : 'div';
+    const Component = 'div';
 
     return (
       <Component
@@ -62,18 +60,7 @@ export const Container = forwardRef<HTMLDivElement, Props>(
           scrollable && styles.scrollable,
           shadow && styles.shadow
         )}
-        onClick={onClick}
-        tabIndex={onClick ? 0 : undefined}
       >
-        {label ? (
-          <div className={styles.Header}>
-            {label}
-            <div className={styles.Actions}>
-              {onRemove ? <Remove onClick={onRemove} /> : undefined}
-              <Handle {...handleProps} />
-            </div>
-          </div>
-        ) : null}
         {placeholder ? children : <ul>{children}</ul>}
       </Component>
     );
