@@ -16,15 +16,17 @@ export function ConfirmDialog({
   question,
   description,
   handleConfirm,
+  disabled,
 }: {
   question: string;
   description: string;
   handleConfirm?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger>
-        <Button variant="outline" size="icon">
+      <AlertDialogTrigger disabled={disabled}>
+        <Button variant="outline" size="icon" disabled={disabled}>
           <X />
         </Button>
       </AlertDialogTrigger>

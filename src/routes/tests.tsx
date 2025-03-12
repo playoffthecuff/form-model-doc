@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import FormBuilder from "../components/draggables";
 
 export const Route = createFileRoute("/tests")({
   component: RouteComponent,
@@ -7,10 +8,7 @@ export const Route = createFileRoute("/tests")({
 function RouteComponent() {
   return (
     <>
-      <p>React fragment test 1</p>
-      <p>React fragment test 2</p>
-      <p>React fragment test 3</p>
-      <abvgdeyka></abvgdeyka>
+      <FormBuilder />
     </>
   );
 }

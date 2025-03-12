@@ -1,78 +1,139 @@
-import { useState } from "react";
-// biome-ignore lint/style/useImportType: <explanation>
 import {
   DndContext,
-  closestCenter,
-  useDraggable,
-  useDroppable,
   DragEndEvent,
   DragOverlay,
-  DragOverEvent,
+  DraggableAttributes,
+  Modifier,
+  pointerWithin,
+  useDraggable,
+  useDroppable,
 } from "@dnd-kit/core";
+import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import {
   SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
   arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { nanoid } from "nanoid";
 
-// Тип элемента формы
+import { CSS, Transform } from "@dnd-kit/utilities";
+import { Edit, GripVertical, X } from "lucide-react";
+import { nanoid } from "nanoid";
+import { ReactNode, useState } from "react";
+import { ConfirmDialog } from "../confirm-dialog";
+import { Button } from "../ui/button";
+
 type FormElement = {
   id: string;
   type: string;
   label: string;
+  origin: string;
 };
 
-// Исходные элементы шаблона
+const restrictToVertical: Modifier = ({ transform }) => {
+  return { ...transform, x: 0 };
+};
+
 const availableFields: FormElement[] = [
-  { id: "input", type: "input", label: "Текстовое поле" },
-  { id: "checkbox", type: "checkbox", label: "Чекбокс" },
-  { id: "select", type: "select", label: "Выпадающий список" },
+  { id: "input", type: "input", label: "Текстовое поле", origin: "template" },
+  { id: "checkbox", type: "checkbox", label: "Чекбокс", origin: "template" },
+  {
+    id: "select",
+    type: "select",
+    label: "Выпадающий список",
+    origin: "template",
+  },
 ];
 
-// Компонент шаблонного элемента (справа)
-function DraggableTemplateItem({ item }: { item: FormElement }) {
-  const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `template-${item.id}`, // Уникальный ID для шаблона
-    data: { type: "template", item },
-  });
-
+function ItemWrapper({
+  children,
+  setNodeRef,
+  listeners,
+  attributes,
+  transform,
+  transition,
+  editable = false,
+}: {
+  children: ReactNode;
+  setNodeRef?: (element: HTMLElement | null) => void;
+  listeners?: SyntheticListenerMap;
+  attributes?: DraggableAttributes;
+  transform: Transform | null;
+  transition?: string;
+  editable?: boolean;
+}) {
   return (
     <div
       ref={setNodeRef}
       {...attributes}
-      {...listeners}
-      className="p-2 border rounded bg-white cursor-grab"
-    >
-      {item.label}
-    </div>
-  );
-}
-
-// Компонент перетаскиваемого элемента в рабочей области (сортируемый)
-function SortableItem({ item }: { item: FormElement }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: item.id });
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      className="p-2 border rounded bg-gray-200 cursor-grab"
+      className="p-2 border rounded bg-gray-200 flex gap-x-4"
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
       }}
     >
-      {item.label}
+      <div className="flex flex-1">{children}</div>
+      <div className="flex flex-col gap-y-2">
+        <ConfirmDialog
+          question="r u sure?"
+          description="it removing item from the list"
+          disabled={!editable}
+        />
+        <Button size="icon" variant="outline" disabled={!editable}>
+          <Edit />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          {...listeners}
+          className="hover:cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical />
+        </Button>
+      </div>
     </div>
   );
 }
 
-// Компонент рабочей области (левая зона)
+function DraggableTemplateItem({ item }: { item: FormElement }) {
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `template-${item.id}`,
+    data: { type: "template", item, origin: "template" },
+  });
+
+  return (
+    <ItemWrapper
+      attributes={attributes}
+      listeners={listeners}
+      setNodeRef={setNodeRef}
+      transform={null}
+    >
+      <div>{item.label}</div>
+    </ItemWrapper>
+  );
+}
+
+function SortableItem({ item }: { item: FormElement }) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: item.id,
+      data: { type: "sortable", item, origin: "workspace" },
+    });
+
+  return (
+    <ItemWrapper
+      attributes={attributes}
+      setNodeRef={setNodeRef}
+      listeners={listeners}
+      transform={transform}
+      transition={transition}
+      editable
+    >
+      <div>{item.label}</div>
+    </ItemWrapper>
+  );
+}
+
 function DroppableArea({ children }: { children: React.ReactNode }) {
   const { setNodeRef } = useDroppable({ id: "droppable-area" });
 
@@ -86,54 +147,37 @@ function DroppableArea({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Основной компонент конструктора формы
 export default function FormBuilder() {
   const [formElements, setFormElements] = useState<FormElement[]>([]);
   const [activeItem, setActiveItem] = useState<FormElement | null>(null);
-  const [isOutside, setIsOutside] = useState(false);
+  const [animateDuration, setAnimateDuration] = useState(0);
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const handleDragStart = (event: any) => {
     const { active } = event;
     const draggedItem = formElements.find((item) => item.id === active.id);
     setActiveItem(draggedItem || active.data.current?.item || null);
-    setIsOutside(false);
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    if (!event.over) {
-      console.log("set out")
-      setIsOutside(true); // Если элемент покинул рабочую область
-    } else {
-      console.log("set in")
-      setIsOutside(false); // Если элемент внутри
-    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    console.log("DRAG END")
     setActiveItem(null);
     const { active, over } = event;
     const activeId = active.id;
+    setAnimateDuration(200);
+    if (!over) return;
 
-    // Удаление элемента при выносе за пределы
-    console.log(isOutside)
-    if (isOutside && formElements.some((item) => item.id === activeId)) {
-      console.log("OUTSIDE")
-      setFormElements((prev) => prev.filter((item) => item.id !== activeId));
-      return;
-    }
+    const isOverWorkspace = over.id === "droppable-area";
 
-    // Если перетаскиваемый элемент из шаблона (создание нового)
-    if (active.data.current?.type === "template") {
+    if (active.data.current?.type === "template" && isOverWorkspace) {
+      setAnimateDuration(0);
       const newItem: FormElement = {
         ...active.data.current.item,
-        id: nanoid(), // Уникальный ID
+        id: nanoid(),
+        origin: "workspace",
       };
       setFormElements((prev) => [...prev, newItem]);
       return;
     }
-
-    // Если перемещение внутри рабочей области
     const oldIndex = formElements.findIndex((item) => item.id === activeId);
     const newIndex = formElements.findIndex((item) => item.id === over?.id);
 
@@ -144,13 +188,12 @@ export default function FormBuilder() {
 
   return (
     <DndContext
-      collisionDetection={closestCenter}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
+      modifiers={activeItem?.origin === "workspace" ? [restrictToVertical] : []}
     >
-      <div className="grid grid-cols-2 gap-4 p-4">
-        {/* Рабочая область (левая зона) */}
+      <div className="grid grid-cols-2 gap-x-4 p-4">
         <DroppableArea>
           <SortableContext
             items={formElements.map((item) => item.id)}
@@ -162,7 +205,6 @@ export default function FormBuilder() {
           </SortableContext>
         </DroppableArea>
 
-        {/* Доступные элементы (правая зона) */}
         <div className="p-4 border rounded bg-gray-100">
           {availableFields.map((item) => (
             <DraggableTemplateItem key={item.id} item={item} />
@@ -170,12 +212,14 @@ export default function FormBuilder() {
         </div>
       </div>
 
-      {/* Drag Overlay (эффект перетаскивания) */}
-      <DragOverlay>
+      <DragOverlay
+        dropAnimation={{
+          duration: animateDuration,
+          easing: "linear",
+        }}
+      >
         {activeItem ? (
-          <div className="p-2 border rounded bg-gray-400 cursor-grab">
-            {activeItem.label}
-          </div>
+          <ItemWrapper transform={null}>{activeItem.label}</ItemWrapper>
         ) : null}
       </DragOverlay>
     </DndContext>
