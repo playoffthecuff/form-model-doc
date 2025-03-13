@@ -1,5 +1,6 @@
+import { Edit } from "lucide-react";
 import type { SelectProps } from ".";
-import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import {
   Select,
   SelectContent,
@@ -11,23 +12,29 @@ import {
 const CustomizableSelect = ({
   items,
   defaultValue,
-  placeholder,
   label,
   id,
   errorMessage,
   disabled = false,
 }: SelectProps) => (
-  <div>
-    <label htmlFor={id}>{label}</label>
+  <div className="flex flex-col gap-y-2">
+    <label htmlFor={id} className="leading-none">
+      {label}
+    </label>
     <Select defaultValue={defaultValue} disabled={disabled}>
-      <SelectTrigger id={id} className="w-full">
-        <SelectValue placeholder={placeholder} />
+      <SelectTrigger id={id} className="w-54">
+        <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {items.map((v, i) => (
-          <SelectItem key={i} value={v}>
-            {v}
-          </SelectItem>
+          <div key={i} className="flex gap-x-2">
+            <Button size="icon" variant="ghost">
+              <Edit />
+            </Button>
+            <SelectItem value={v}>
+              <div>{v}</div>
+            </SelectItem>
+          </div>
         ))}
       </SelectContent>
     </Select>

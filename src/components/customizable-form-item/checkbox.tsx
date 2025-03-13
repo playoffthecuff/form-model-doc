@@ -1,4 +1,4 @@
-import type { CheckBoxProps } from ".";
+import type { CheckboxProps } from ".";
 import { Checkbox } from "../ui/checkbox";
 
 const CustomizableCheckbox = ({
@@ -6,15 +6,15 @@ const CustomizableCheckbox = ({
   disabled = false,
   id,
   checked,
-}: CheckBoxProps) => (
-  <div className="flex gap-x-2">
-    <Checkbox id={id} disabled={disabled} checked={checked} />
+}: CheckboxProps) => (
+  <div className="flex gap-y-2 flex-col">
     <label
       htmlFor={id}
-      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
     >
       {label}
     </label>
+    <Checkbox id={id} disabled={disabled} checked={checked} />
   </div>
 );
 

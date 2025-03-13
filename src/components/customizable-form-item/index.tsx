@@ -1,4 +1,5 @@
 import CustomizableCheckbox from "./checkbox";
+import CustomizableInput from "./input";
 import CustomizableSelect from "./select";
 
 interface CommonProps {
@@ -8,24 +9,30 @@ interface CommonProps {
   className?: string;
 }
 
-interface CheckBoxData {
+interface CheckboxData {
   checked?: boolean;
 }
 
-export interface CheckBoxProps extends CommonProps, CheckBoxData {}
+interface InputData {
+  defaultValue?: string;
+}
 
-interface SelectData{
+export interface CheckboxProps extends CommonProps, CheckboxData {}
+export interface InputProps extends CommonProps, InputData {}
+export type FormItemType = "checkbox" | "input" | "select";
+
+interface SelectData {
   defaultValue?: string;
   items: string[];
-  placeholder?: string;
   errorMessage?: string;
 }
 
 export interface SelectProps extends CommonProps, SelectData {}
 
 export type FormItemProps =
-  | (CommonProps & { type: "checkbox" } & CheckBoxData)
-  | (CommonProps & { type: "select" } & SelectData);
+  | (CommonProps & { type: "checkbox" } & CheckboxData)
+  | (CommonProps & { type: "select" } & SelectData)
+  | (CommonProps & { type: "input" } & InputData);
 
 export default function CustomizableFormItem(props: FormItemProps) {
   const { type, id, label, disabled, className } = props;
@@ -46,7 +53,14 @@ export default function CustomizableFormItem(props: FormItemProps) {
           id={id}
           disabled={disabled}
           items={props.items}
-          placeholder={props.placeholder}
+        />
+      )}
+      {type === "input" && (
+        <CustomizableInput
+          defaultValue={props.defaultValue}
+          label={label}
+          id={id}
+          disabled={disabled}
         />
       )}
     </div>

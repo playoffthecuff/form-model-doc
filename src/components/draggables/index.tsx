@@ -17,17 +17,28 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS, Transform } from "@dnd-kit/utilities";
-import { Edit, GripVertical, X } from "lucide-react";
+import clsx from "clsx";
+import { Edit, GripVertical } from "lucide-react";
 import { nanoid } from "nanoid";
 import { ReactNode, useState } from "react";
 import { ConfirmDialog } from "../confirm-dialog";
+import { FormItemType } from "../customizable-form-item";
+import CustomizableCheckbox from "../customizable-form-item/checkbox";
+import CustomizableInput from "../customizable-form-item/input";
+import CustomizableSelect from "../customizable-form-item/select";
+import {
+  CheckboxFormField,
+  InputFormField,
+  SelectFormField,
+} from "../form-items/form-fields";
 import { Button } from "../ui/button";
 
 type FormElement = {
   id: string;
-  type: string;
+  type: FormItemType;
   label: string;
   origin: string;
+  handleRemove?: (id: string) => void;
 };
 
 const restrictToVertical: Modifier = ({ transform }) => {
@@ -53,6 +64,9 @@ function ItemWrapper({
   transform,
   transition,
   editable = false,
+  id,
+  handleRemove,
+  className,
 }: {
   children: ReactNode;
   setNodeRef?: (element: HTMLElement | null) => void;
@@ -61,12 +75,21 @@ function ItemWrapper({
   transform: Transform | null;
   transition?: string;
   editable?: boolean;
+  id?: string;
+  handleRemove?: (id: string) => void;
+  className?: string;
 }) {
+  const handleConfirm = () => {
+    if (handleRemove && id) handleRemove(id);
+  };
   return (
     <div
       ref={setNodeRef}
       {...attributes}
-      className="p-2 border rounded bg-gray-200 flex gap-x-4"
+      className={clsx(
+        "p-2 border rounded-md flex gap-x-4 bg-background",
+        className
+      )}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -75,9 +98,10 @@ function ItemWrapper({
       <div className="flex flex-1">{children}</div>
       <div className="flex flex-col gap-y-2">
         <ConfirmDialog
-          question="r u sure?"
-          description="it removing item from the list"
+          question="Вы уверены?"
+          description="Удаление элемента формы"
           disabled={!editable}
+          handleConfirm={handleConfirm}
         />
         <Button size="icon" variant="outline" disabled={!editable}>
           <Edit />
@@ -95,7 +119,13 @@ function ItemWrapper({
   );
 }
 
-function DraggableTemplateItem({ item }: { item: FormElement }) {
+function DraggableTemplateItem({
+  item,
+  className,
+}: {
+  item: FormElement;
+  className?: string;
+}) {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `template-${item.id}`,
     data: { type: "template", item, origin: "template" },
@@ -107,8 +137,35 @@ function DraggableTemplateItem({ item }: { item: FormElement }) {
       listeners={listeners}
       setNodeRef={setNodeRef}
       transform={null}
+      className={className}
     >
-      <div>{item.label}</div>
+      {item.type === "checkbox" && (
+        <CheckboxFormField
+          label={item.label}
+          name="Чекбокс"
+          description="Описание"
+          disabled
+        />
+      )}
+      {item.type === "input" && (
+        <InputFormField
+          label={item.label}
+          name="Текстовое поле"
+          defaultValue="Значение по умолчанию"
+          description="Описание"
+          disabled
+        />
+      )}
+      {item.type === "select" && (
+        <SelectFormField
+          items={["Значение по умолчанию"]}
+          label={item.label}
+          defaultValue="Значение по умолчанию"
+          name="Выпадающий список"
+          description="Описание"
+          disabled
+        />
+      )}
     </ItemWrapper>
   );
 }
@@ -128,8 +185,33 @@ function SortableItem({ item }: { item: FormElement }) {
       transform={transform}
       transition={transition}
       editable
+      handleRemove={item.handleRemove}
+      id={item.id}
     >
-      <div>{item.label}</div>
+      {item.type === "checkbox" && (
+        <CheckboxFormField
+          label={item.label}
+          name="Чекбокс"
+          description="Описание"
+        />
+      )}
+      {item.type === "input" && (
+        <InputFormField
+          label={item.label}
+          name="Текстовое поле"
+          defaultValue="Значение по умолчанию"
+          description="Описание"
+        />
+      )}
+      {item.type === "select" && (
+        <SelectFormField
+          items={["Значение по умолчанию"]}
+          label={item.label}
+          defaultValue="Значение по умолчанию"
+          name="Выпадающий список"
+          description="Описание"
+        />
+      )}
     </ItemWrapper>
   );
 }
@@ -140,7 +222,7 @@ function DroppableArea({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={setNodeRef}
-      className="min-h-[300px] p-4 border-2 border-dashed rounded"
+      className="min-h-80 p-4 border-2 border-dashed rounded flex flex-col gap-y-4"
     >
       {children}
     </div>
@@ -151,6 +233,8 @@ export default function FormBuilder() {
   const [formElements, setFormElements] = useState<FormElement[]>([]);
   const [activeItem, setActiveItem] = useState<FormElement | null>(null);
   const [animateDuration, setAnimateDuration] = useState(0);
+  const handleRemove = (id: string) =>
+    setFormElements(formElements.filter((el) => el.id !== id));
 
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const handleDragStart = (event: any) => {
@@ -174,6 +258,7 @@ export default function FormBuilder() {
         ...active.data.current.item,
         id: nanoid(),
         origin: "workspace",
+        handleRemove,
       };
       setFormElements((prev) => [...prev, newItem]);
       return;
@@ -205,7 +290,7 @@ export default function FormBuilder() {
           </SortableContext>
         </DroppableArea>
 
-        <div className="p-4 border rounded bg-gray-100">
+        <div className="p-4 border rounded flex flex-col gap-y-4">
           {availableFields.map((item) => (
             <DraggableTemplateItem key={item.id} item={item} />
           ))}
@@ -219,8 +304,9 @@ export default function FormBuilder() {
         }}
       >
         {activeItem ? (
-          <ItemWrapper transform={null}>{activeItem.label}</ItemWrapper>
-        ) : null}
+          <DraggableTemplateItem key={activeItem.id} item={activeItem} />
+        ) : // <ItemWrapper transform={null} className="bg-background">{activeItem.label}</ItemWrapper>
+        null}
       </DragOverlay>
     </DndContext>
   );
