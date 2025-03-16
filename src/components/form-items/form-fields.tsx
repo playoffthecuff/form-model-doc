@@ -1,36 +1,50 @@
 import { Edit } from "lucide-react";
+import { Control } from "react-hook-form";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 } from "../ui/select";
 
 interface CommonProps {
-  name: string;
-  label: string;
-  disabled?: boolean;
-  description?: string;
+	name: Path<FormValues>;
+	label: string;
+	disabled?: boolean;
+	description?: string;
+	control: Control<
+		{
+			elements: {
+				id: string;
+				type: string;
+				label: string;
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				defaultValue?: any;
+			}[];
+		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		any
+	>;
 }
 
 interface CheckboxData {
-  checked?: boolean;
+	checked?: boolean;
 }
 
 interface InputData {
-  defaultValue?: string;
+	defaultValue?: string;
 }
 
 export interface CheckboxProps extends CommonProps, CheckboxData {}
@@ -38,106 +52,120 @@ export interface InputProps extends CommonProps, InputData {}
 export type FormItemType = "checkbox" | "input" | "select";
 
 interface SelectData {
-  defaultValue?: string;
-  items: string[];
+	defaultValue?: string;
+	items: string[];
+}
+
+import { Path } from "react-hook-form";
+
+interface FormValues {
+  elements: {
+    id: string;
+    type: string;
+    label: string;
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    defaultValue?: any;
+  }[];
 }
 
 interface SelectProps extends CommonProps, SelectData {}
 
 export function SelectFormField({
-  items,
-  defaultValue,
-  name,
-  label,
-  description,
-  disabled = false,
+	items,
+	name,
+	label,
+	description,
+	disabled = false,
+	control,
 }: SelectProps) {
-  return (
-    <FormField
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <Select
-            onValueChange={field.onChange}
-            defaultValue={defaultValue}
-            disabled={disabled}
-          >
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {items.map((v, i) => (
-                <div key={i} className="flex gap-x-2">
-                  <Button size="icon" variant="ghost">
-                    <Edit />
-                  </Button>
-                  <SelectItem value={v}>
-                    <div>{v}</div>
-                  </SelectItem>
-                </div>
-              ))}
-            </SelectContent>
-          </Select>
-          <FormDescription>{description}</FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
+	return (
+		<FormField
+			control={control}
+			name={name}
+			render={({ field }) => (
+				<FormItem>
+					<FormLabel>{label}</FormLabel>
+					<Select
+						onValueChange={field.onChange}
+						disabled={disabled}
+						value={field.value}
+					>
+						<FormControl>
+							<SelectTrigger className="w-54">
+								<SelectValue />
+							</SelectTrigger>
+						</FormControl>
+						<SelectContent>
+							{items.map((v, i) => (
+								<div key={i} className="flex gap-x-2">
+									<Button size="icon" variant="ghost">
+										<Edit />
+									</Button>
+									<SelectItem value={v.toString()}>{v}</SelectItem>
+								</div>
+							))}
+						</SelectContent>
+					</Select>
+					<FormDescription>{description}</FormDescription>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	);
 }
 
 export function CheckboxFormField({
-  name,
-  label,
-  disabled = false,
-  checked,
-  description,
+	name,
+	label,
+	disabled = false,
+	description,
+	control,
 }: CheckboxProps) {
-  return (
-    <FormField
-      name={name}
-      render={({ field }) => (
-        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-          <FormControl>
-            <Checkbox
-              checked={checked}
-              onCheckedChange={field.onChange}
-              disabled={disabled}
-            />
-          </FormControl>
-          <div className="space-y-1 leading-none">
-            <FormLabel>{label}</FormLabel>
-            <FormDescription>{description}</FormDescription>
-          </div>
-        </FormItem>
-      )}
-    />
-  );
+	return (
+		<FormField
+			name={name}
+			control={control}
+			render={({ field }) => (
+				<FormItem className="flex flex-row p-2">
+					<FormControl>
+						<Checkbox
+							checked={field.value}
+							onCheckedChange={field.onChange}
+							disabled={disabled}
+						/>
+					</FormControl>
+					<div className="space-y-1 leading-none">
+						<FormLabel>{label}</FormLabel>
+						<FormDescription>{description}</FormDescription>
+						<FormMessage />
+					</div>
+				</FormItem>
+			)}
+		/>
+	);
 }
 
 export function InputFormField({
-  name,
-  description,
-  label,
-  disabled = false,
-  defaultValue,
+	name,
+	description,
+	label,
+	disabled = false,
+	control,
 }: InputProps) {
-  return (
-    <FormField
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <Input {...field} disabled={disabled} defaultValue={defaultValue} />
-          </FormControl>
-          <FormDescription>{description}</FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
+	return (
+		<FormField
+			name={name}
+			control={control}
+			render={({ field }) => (
+				<FormItem>
+					<FormLabel>{label}</FormLabel>
+					<FormControl>
+						<Input {...field} disabled={disabled} className="w-54" />
+					</FormControl>
+					<FormDescription>{description}</FormDescription>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	);
 }

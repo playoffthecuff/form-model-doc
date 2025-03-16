@@ -25,9 +25,9 @@ export function ConfirmDialog({
 }) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger disabled={disabled}>
-        <Button variant="outline" size="icon" disabled={disabled}>
-          <X />
+      <AlertDialogTrigger disabled={disabled} className="disabled:opacity-50 disabled:hover:cursor-auto">
+        <Button variant="outline" size="icon" disabled={disabled} asChild  className="p-2">
+          <X className="aria-disabled:hover:cursor-auto aria-disabled:hover:bg-background" aria-disabled={disabled}/>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
