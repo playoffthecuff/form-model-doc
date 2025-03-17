@@ -11,7 +11,6 @@ import {
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import {
 	SortableContext,
-	arrayMove,
 	useSortable,
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -20,12 +19,10 @@ import { CSS, Transform } from "@dnd-kit/utilities";
 import { zodResolver } from "@hookform/resolvers/zod";
 import clsx from "clsx";
 import { Edit, GripVertical } from "lucide-react";
-import { nanoid } from "nanoid";
 import { ReactNode, useState } from "react";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { ConfirmPopover } from "../confirm-popover";
-import { FormItemType } from "../customizable-form-item";
 import {
 	CheckboxFormField,
 	InputFormField,
@@ -33,18 +30,6 @@ import {
 } from "../form-items/form-fields";
 import { Button } from "../ui/button";
 import { Form } from "../ui/form";
-import { Input } from "../ui/input";
-
-type FormElement = {
-	id: string;
-	type: FormItemType;
-	label: string;
-	origin: "template" | "workspace";
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	schema?: z.ZodObject<any>;
-	defaultValue?: string | boolean;
-	index: number;
-};
 
 const restrictToVertical: Modifier = ({ transform }) => {
 	return { ...transform, x: 0 };
@@ -140,8 +125,8 @@ function DraggableTemplateItem({
 						value: string;
 				  }
 			)[];
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		any
 	>;
 }) {
@@ -177,7 +162,7 @@ function DraggableTemplateItem({
 			)}
 			{item.type === "select" && (
 				<SelectFormField
-					items={["Значение по умолчанию"]}
+					options={["Значение по умолчанию"]}
 					label={item.label}
 					name={`elements.${index}.value`}
 					description="Описание"
@@ -221,7 +206,6 @@ function SortableItem({
 			id: item.id,
 			data: { type: "sortable", item, origin: "workspace" },
 		});
-	console.log(item);
 	return (
 		<ItemWrapper
 			attributes={attributes}
@@ -254,7 +238,7 @@ function SortableItem({
 			)}
 			{item.type === "select" && (
 				<SelectFormField
-					items={["Значение по умолчанию", "Другое значение"]}
+					options={["Значение по умолчанию", "Другое значение"]}
 					label={item.label}
 					name={`elements.${index}.value`}
 					description="Описание"
@@ -296,7 +280,6 @@ interface DragElement {
 }
 
 export default function FormBuilder() {
-	const [formElements, setFormElements] = useState<DragElement[]>([]);
 	const [activeItem, setActiveItem] = useState<DragElement | null>(null);
 	const [animateDuration, setAnimateDuration] = useState(0);
 
@@ -311,7 +294,7 @@ export default function FormBuilder() {
 		},
 	});
 
-	const { fields, append, remove } = useFieldArray({
+	const { fields, append, remove, move } = useFieldArray({
 		control: form.control,
 		name: "elements",
 	});
@@ -354,8 +337,7 @@ export default function FormBuilder() {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const handleDragStart = (event: any) => {
 		const { active } = event;
-		const draggedItem = formElements.find((elem) => elem.item.id === active.id);
-		setActiveItem(draggedItem || active.data.current || null);
+		setActiveItem(active.data.current || null);
 	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
@@ -363,6 +345,7 @@ export default function FormBuilder() {
 		const { active, over } = event;
 		const activeId = active.id;
 		setAnimateDuration(200);
+		console.log(fields, activeId);
 		if (!over) return;
 
 		const isOverWorkspace = over.id === "droppable-area";
@@ -374,24 +357,23 @@ export default function FormBuilder() {
 		if (elementType === "template" && isOverWorkspace) {
 			setAnimateDuration(0);
 			const newElement = {
-				id: nanoid(),
+				id: "",
 				label,
 				type,
 				value,
-			}
-			console.log(newElement);
+			};
 			append(newElement);
 			return;
 		}
-		const oldIndex = formElements.findIndex(
-			(elem) => elem.item.id === activeId,
+		const oldIndex = fields.findIndex(
+			(elem) => elem.id === activeId,
 		);
-		const newIndex = formElements.findIndex(
-			(elem) => elem.item.id === over?.id,
+		const newIndex = fields.findIndex(
+			(elem) => elem.id === over?.id,
 		);
 
 		if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-			setFormElements((prev) => arrayMove(prev, oldIndex, newIndex));
+			move(oldIndex, newIndex);
 		}
 	};
 
@@ -413,7 +395,7 @@ export default function FormBuilder() {
 					>
 						<DroppableArea>
 							<SortableContext
-								items={formElements.map((elem) => elem.item.id)}
+								items={fields.map((elem) => elem.id)}
 								strategy={verticalListSortingStrategy}
 							>
 								{fields.map((field, index) => (
@@ -427,9 +409,7 @@ export default function FormBuilder() {
 								))}
 							</SortableContext>
 						</DroppableArea>
-						<Button onClick={() => console.log(form.getValues())}>
-							Test
-						</Button>
+						<Button onClick={() => console.log(form.getValues())}>Test</Button>
 					</form>
 				</Form>
 				<div className="p-4 border rounded">

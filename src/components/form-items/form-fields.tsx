@@ -24,16 +24,19 @@ interface CommonProps {
 	label: string;
 	disabled?: boolean;
 	description?: string;
-	control: Control<{
-    elements: {
-        id: string;
-        type: string;
-        label: string;
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        value?: any;
-    }[];
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-}, any>;
+	control: Control<
+		{
+			elements: {
+				id: string;
+				type: string;
+				label: string;
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				value?: any;
+			}[];
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		},
+		any
+	>;
 }
 
 interface CheckboxData {
@@ -50,7 +53,7 @@ export type FormItemType = "checkbox" | "input" | "select";
 
 interface SelectData {
 	defaultValue?: string;
-	items: string[];
+	options: string[];
 }
 
 import { Path } from "react-hook-form";
@@ -69,7 +72,7 @@ interface FormValues {
 interface SelectProps extends CommonProps, SelectData {}
 
 export function SelectFormField({
-	items,
+	options,
 	name,
 	label,
 	description,
@@ -94,7 +97,7 @@ export function SelectFormField({
 							</SelectTrigger>
 						</FormControl>
 						<SelectContent>
-							{items.map((v, i) => (
+							{options.map((v, i) => (
 								<div key={i} className="flex gap-x-2">
 									<Button size="icon" variant="ghost">
 										<Edit />
