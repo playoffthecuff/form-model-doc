@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import clsx from "clsx";
 import { Edit, GripVertical } from "lucide-react";
 import { nanoid } from "nanoid";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { ConfirmPopover } from "../confirm-popover";
@@ -32,16 +32,18 @@ import {
 	SelectFormField,
 } from "../form-items/form-fields";
 import { Button } from "../ui/button";
+import { Form } from "../ui/form";
 import { Input } from "../ui/input";
 
 type FormElement = {
 	id: string;
 	type: FormItemType;
 	label: string;
-	origin: string;
+	origin: "template" | "workspace";
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	schema?: z.ZodObject<any>;
 	defaultValue?: string | boolean;
+	index: number;
 };
 
 const restrictToVertical: Modifier = ({ transform }) => {
@@ -114,33 +116,39 @@ function ItemWrapper({
 function DraggableTemplateItem({
 	item,
 	className,
-	disabled,
 	index,
 	control,
+	disabled = false,
 }: {
-	item: FormElement;
+	item: { id: string; type: string; label: string };
 	className?: string;
-	disabled?: boolean;
 	index: number;
+	disabled?: boolean;
 	control: Control<
 		{
-			elements: {
-				id: string;
-				type: string;
-				label: string;
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-				defaultValue?: any;
-			}[];
+			elements: (
+				| {
+						id: string;
+						type: string;
+						label: string;
+						value: boolean;
+				  }
+				| {
+						id: string;
+						type: string;
+						label: string;
+						value: string;
+				  }
+			)[];
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		any
 	>;
 }) {
 	const { attributes, listeners, setNodeRef } = useDraggable({
 		id: `template-${item.id}`,
-		data: { type: "template", item, origin: "template" },
+		data: { type: "template", item, origin: "template", index },
 	});
-
 	return (
 		<ItemWrapper
 			attributes={attributes}
@@ -152,29 +160,29 @@ function DraggableTemplateItem({
 			{item.type === "checkbox" && (
 				<CheckboxFormField
 					label={item.label}
-					name={`elements.${index}.id`}
+					name={`elements.${index}.value`}
 					description="Описание"
-					disabled={disabled}
 					control={control}
+					disabled={disabled}
 				/>
 			)}
 			{item.type === "input" && (
 				<InputFormField
 					label={item.label}
-					name={`elements.${index}.id`}
+					name={`elements.${index}.value`}
 					description="Описание"
-					disabled={disabled}
 					control={control}
+					disabled={disabled}
 				/>
 			)}
 			{item.type === "select" && (
 				<SelectFormField
 					items={["Значение по умолчанию"]}
 					label={item.label}
-					name={`elements.${index}.id`}
+					name={`elements.${index}.value`}
 					description="Описание"
-					disabled={disabled}
 					control={control}
+					disabled={disabled}
 				/>
 			)}
 		</ItemWrapper>
@@ -184,15 +192,15 @@ function DraggableTemplateItem({
 function SortableItem({
 	item,
 	className,
-	disabled,
 	index,
 	onRemove,
+	disabled = false,
 	control,
 }: {
 	item: { id: string; type: string; label: string };
 	className?: string;
-	disabled?: boolean;
 	index: number;
+	disabled?: boolean;
 	onRemove?: () => void;
 	control: Control<
 		{
@@ -201,7 +209,7 @@ function SortableItem({
 				type: string;
 				label: string;
 				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-				defaultValue?: any;
+				value?: any;
 			}[];
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -213,7 +221,7 @@ function SortableItem({
 			id: item.id,
 			data: { type: "sortable", item, origin: "workspace" },
 		});
-
+	console.log(item);
 	return (
 		<ItemWrapper
 			attributes={attributes}
@@ -229,29 +237,29 @@ function SortableItem({
 			{item.type === "checkbox" && (
 				<CheckboxFormField
 					label={item.label}
-					name={`elements.${index}.id`}
+					name={`elements.${index}.value`}
 					description="Описание"
-					disabled={disabled}
 					control={control}
+					disabled={disabled}
 				/>
 			)}
 			{item.type === "input" && (
 				<InputFormField
 					label={item.label}
-					name={`elements.${index}.id`}
+					name={`elements.${index}.value`}
 					description="Описание"
-					disabled={disabled}
 					control={control}
+					disabled={disabled}
 				/>
 			)}
 			{item.type === "select" && (
 				<SelectFormField
 					items={["Значение по умолчанию", "Другое значение"]}
 					label={item.label}
-					name={`elements.${index}.id`}
+					name={`elements.${index}.value`}
 					description="Описание"
-					disabled={disabled}
 					control={control}
+					disabled={disabled}
 				/>
 			)}
 		</ItemWrapper>
@@ -271,23 +279,32 @@ function DroppableArea({ children }: { children: React.ReactNode }) {
 	);
 }
 
-export default function FormBuilder() {
-	const [formElements, setFormElements] = useState<FormElement[]>([]);
-	const [activeItem, setActiveItem] = useState<FormElement | null>(null);
-	const [animateDuration, setAnimateDuration] = useState(0);
+const elementSchema = z.object({
+	id: z.string(),
+	type: z.string(),
+	label: z.string(),
+	value: z.any(),
+});
 
-	const elementSchema = z.object({
-		id: z.string(),
-		type: z.string(),
-		label: z.string(),
-		defaultValue: z.any(),
-	});
+type ElementSchema = z.infer<typeof elementSchema>;
+
+interface DragElement {
+	item: ElementSchema;
+	index: number;
+	origin: string;
+	type: string;
+}
+
+export default function FormBuilder() {
+	const [formElements, setFormElements] = useState<DragElement[]>([]);
+	const [activeItem, setActiveItem] = useState<DragElement | null>(null);
+	const [animateDuration, setAnimateDuration] = useState(0);
 
 	const schema = z.object({
 		elements: z.array(elementSchema).default([]),
 	});
 
-	const { control, handleSubmit, reset } = useForm({
+	const form = useForm({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			elements: [],
@@ -295,47 +312,50 @@ export default function FormBuilder() {
 	});
 
 	const { fields, append, remove } = useFieldArray({
-		control,
+		control: form.control,
 		name: "elements",
 	});
 
-	const tempForm = useForm({
+	const templateForm = useForm({
 		defaultValues: {
 			elements: [
 				{
 					id: "checkbox",
 					type: "checkbox",
-					label: "чекбокс",
-					defaultValue: false,
+					label: "Чекбокс",
+					value: false,
 				},
 				{
 					id: "input",
 					type: "input",
-					label: "текстовое поле",
-					defaultValue: "Значение по умолчанию",
+					label: "Текстовое поле",
+					value: "Значение по умолчанию",
 				},
 				{
 					id: "select",
 					type: "select",
-					label: "выпадающий список",
-					defaultValue: "Значение по умолчанию",
+					label: "Выпадающий список",
+					value: "Значение по умолчанию",
 				},
 			],
 		},
 	});
 
-	const templateControl = tempForm.control;
+	const tempArr = useFieldArray({
+		control: templateForm.control,
+		name: "elements",
+	});
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-	useEffect(() => {
-		reset();
-	}, [schema, reset]);
+	// useEffect(() => {
+	// 	reset();
+	// }, [schema, reset]);
 
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const handleDragStart = (event: any) => {
 		const { active } = event;
-		const draggedItem = formElements.find((item) => item.id === active.id);
-		setActiveItem(draggedItem || active.data.current?.item || null);
+		const draggedItem = formElements.find((elem) => elem.item.id === active.id);
+		setActiveItem(draggedItem || active.data.current || null);
 	};
 
 	const handleDragEnd = (event: DragEndEvent) => {
@@ -346,19 +366,29 @@ export default function FormBuilder() {
 		if (!over) return;
 
 		const isOverWorkspace = over.id === "droppable-area";
-		const type = active.data.current?.type;
-		if (type === "template" && isOverWorkspace) {
+		const elementType = active.data.current?.type;
+		const type = active.data.current?.item.type;
+		const value = active.data.current?.item.value;
+		const label = active.data.current?.item.label;
+
+		if (elementType === "template" && isOverWorkspace) {
 			setAnimateDuration(0);
-			append({
+			const newElement = {
 				id: nanoid(),
-				label: "",
+				label,
 				type,
-				defaultValue: tempForm.getValues(active.data.current?.item.id)
-			})
+				value,
+			}
+			console.log(newElement);
+			append(newElement);
 			return;
 		}
-		const oldIndex = formElements.findIndex((item) => item.id === activeId);
-		const newIndex = formElements.findIndex((item) => item.id === over?.id);
+		const oldIndex = formElements.findIndex(
+			(elem) => elem.item.id === activeId,
+		);
+		const newIndex = formElements.findIndex(
+			(elem) => elem.item.id === over?.id,
+		);
 
 		if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
 			setFormElements((prev) => arrayMove(prev, oldIndex, newIndex));
@@ -376,65 +406,46 @@ export default function FormBuilder() {
 			modifiers={activeItem?.origin === "workspace" ? [restrictToVertical] : []}
 		>
 			<div className="grid grid-cols-2 gap-x-4 p-4">
-				<form
-					onSubmit={handleSubmit(onSubmit, (e) => console.log(e))}
-					className="space-y-4"
-				>
-					<DroppableArea>
-						<SortableContext
-							items={formElements.map((item) => item.id)}
-							strategy={verticalListSortingStrategy}
-						>
-							{fields.map((field, index) => (
-								<SortableItem
+				<Form {...form}>
+					<form
+						onSubmit={form.handleSubmit(onSubmit, (e) => console.log(e))}
+						className="space-y-4"
+					>
+						<DroppableArea>
+							<SortableContext
+								items={formElements.map((elem) => elem.item.id)}
+								strategy={verticalListSortingStrategy}
+							>
+								{fields.map((field, index) => (
+									<SortableItem
+										item={field}
+										key={field.id}
+										onRemove={() => remove(index)}
+										control={form.control}
+										index={index}
+									/>
+								))}
+							</SortableContext>
+						</DroppableArea>
+						<Button onClick={() => console.log(form.getValues())}>
+							Test
+						</Button>
+					</form>
+				</Form>
+				<div className="p-4 border rounded">
+					<Form {...templateForm}>
+						<form className="flex flex-col gap-y-4">
+							{tempArr.fields.map((field, index) => (
+								<DraggableTemplateItem
 									item={field}
 									key={field.id}
-									onRemove={() => remove(index)}
-									control={control}
+									control={templateForm.control}
 									index={index}
+									disabled
 								/>
 							))}
-						</SortableContext>
-					</DroppableArea>
-					<Input />
-				</form>
-
-				<div className="p-4 border rounded">
-					<form className="flex flex-col gap-y-4">
-						<DraggableTemplateItem
-							item={{
-								id: "checkbox",
-								label: "Чекбокс",
-								origin: "template",
-								type: "checkbox",
-							}}
-							control={templateControl}
-							disabled
-							index={0}
-						/>
-						<DraggableTemplateItem
-							item={{
-								id: "input",
-								label: "Текстовое поле",
-								origin: "template",
-								type: "input",
-							}}
-							control={templateControl}
-							disabled
-							index={1}
-						/>
-						<DraggableTemplateItem
-							item={{
-								id: "select",
-								label: "Выпадающий список",
-								origin: "template",
-								type: "select",
-							}}
-							control={templateControl}
-							index={2}
-							disabled
-						/>
-					</form>
+						</form>
+					</Form>
 				</div>
 			</div>
 
@@ -445,13 +456,14 @@ export default function FormBuilder() {
 				}}
 			>
 				{activeItem ? (
-					<DraggableTemplateItem
-						key={activeItem.id}
-						item={activeItem}
-						disabled
-						index={0}
-						control={templateControl}
-					/>
+					<Form {...templateForm}>
+						<DraggableTemplateItem
+							key={activeItem.item.id}
+							item={activeItem.item}
+							index={activeItem.index}
+							control={templateForm.control}
+						/>
+					</Form>
 				) : null}
 			</DragOverlay>
 		</DndContext>

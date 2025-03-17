@@ -24,19 +24,16 @@ interface CommonProps {
 	label: string;
 	disabled?: boolean;
 	description?: string;
-	control: Control<
-		{
-			elements: {
-				id: string;
-				type: string;
-				label: string;
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-				defaultValue?: any;
-			}[];
-		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		any
-	>;
+	control: Control<{
+    elements: {
+        id: string;
+        type: string;
+        label: string;
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        value?: any;
+    }[];
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+}, any>;
 }
 
 interface CheckboxData {
@@ -59,13 +56,14 @@ interface SelectData {
 import { Path } from "react-hook-form";
 
 interface FormValues {
-  elements: {
-    id: string;
-    type: string;
-    label: string;
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    defaultValue?: any;
-  }[];
+	elements: {
+		id: string;
+		type: string;
+		label: string;
+		disabled?: boolean;
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		value?: any;
+	}[];
 }
 
 interface SelectProps extends CommonProps, SelectData {}
@@ -75,13 +73,13 @@ export function SelectFormField({
 	name,
 	label,
 	description,
-	disabled = false,
+	disabled,
 	control,
 }: SelectProps) {
 	return (
 		<FormField
-			control={control}
 			name={name}
+			control={control}
 			render={({ field }) => (
 				<FormItem>
 					<FormLabel>{label}</FormLabel>
@@ -117,8 +115,8 @@ export function SelectFormField({
 export function CheckboxFormField({
 	name,
 	label,
-	disabled = false,
 	description,
+	disabled,
 	control,
 }: CheckboxProps) {
 	return (
@@ -132,6 +130,7 @@ export function CheckboxFormField({
 							checked={field.value}
 							onCheckedChange={field.onChange}
 							disabled={disabled}
+							onChange={field.onChange}
 						/>
 					</FormControl>
 					<div className="space-y-1 leading-none">
@@ -149,23 +148,25 @@ export function InputFormField({
 	name,
 	description,
 	label,
-	disabled = false,
 	control,
+	disabled,
 }: InputProps) {
 	return (
 		<FormField
 			name={name}
 			control={control}
-			render={({ field }) => (
-				<FormItem>
-					<FormLabel>{label}</FormLabel>
-					<FormControl>
-						<Input {...field} disabled={disabled} className="w-54" />
-					</FormControl>
-					<FormDescription>{description}</FormDescription>
-					<FormMessage />
-				</FormItem>
-			)}
+			render={({ field }) => {
+				return (
+					<FormItem>
+						<FormLabel>{label}</FormLabel>
+						<FormControl>
+							<Input {...field} disabled={disabled} className="w-54" />
+						</FormControl>
+						<FormDescription>{description}</FormDescription>
+						<FormMessage />
+					</FormItem>
+				);
+			}}
 		/>
 	);
 }
