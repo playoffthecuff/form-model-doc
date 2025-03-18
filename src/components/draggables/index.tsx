@@ -109,26 +109,8 @@ function DraggableTemplateItem({
 	className?: string;
 	index: number;
 	disabled?: boolean;
-	control: Control<
-		{
-			elements: (
-				| {
-						id: string;
-						type: string;
-						label: string;
-						value: boolean;
-				  }
-				| {
-						id: string;
-						type: string;
-						label: string;
-						value: string;
-				  }
-			)[];
-		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		any
-	>;
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	control: Control<Schema, any>;
 }) {
 	const { attributes, listeners, setNodeRef } = useDraggable({
 		id: `template-${item.id}`,
@@ -147,7 +129,7 @@ function DraggableTemplateItem({
 					label={item.label}
 					name={`elements.${index}.value`}
 					description="Описание"
-					control={control}
+					control={control as unknown as Control<BooleanSchema>}
 					disabled={disabled}
 				/>
 			)}
@@ -156,7 +138,7 @@ function DraggableTemplateItem({
 					label={item.label}
 					name={`elements.${index}.value`}
 					description="Описание"
-					control={control}
+					control={control as unknown as Control<StringSchema>}
 					disabled={disabled}
 				/>
 			)}
@@ -166,7 +148,7 @@ function DraggableTemplateItem({
 					label={item.label}
 					name={`elements.${index}.value`}
 					description="Описание"
-					control={control}
+					control={control as unknown as Control<StringSchema>}
 					disabled={disabled}
 				/>
 			)}
@@ -187,19 +169,7 @@ function SortableItem({
 	index: number;
 	disabled?: boolean;
 	onRemove?: () => void;
-	control: Control<
-		{
-			elements: {
-				id: string;
-				type: string;
-				label: string;
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-				value?: any;
-			}[];
-		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		any
-	>;
+	control: Control<Schema>;
 }) {
 	const { attributes, listeners, setNodeRef, transform, transition } =
 		useSortable({
@@ -223,7 +193,7 @@ function SortableItem({
 					label={item.label}
 					name={`elements.${index}.value`}
 					description="Описание"
-					control={control}
+					control={control as unknown as Control<BooleanSchema>}
 					disabled={disabled}
 				/>
 			)}
@@ -232,7 +202,7 @@ function SortableItem({
 					label={item.label}
 					name={`elements.${index}.value`}
 					description="Описание"
-					control={control}
+					control={control as unknown as Control<StringSchema>}
 					disabled={disabled}
 				/>
 			)}
@@ -242,7 +212,7 @@ function SortableItem({
 					label={item.label}
 					name={`elements.${index}.value`}
 					description="Описание"
-					control={control}
+					control={control as unknown as Control<StringSchema>}
 					disabled={disabled}
 				/>
 			)}
@@ -263,29 +233,54 @@ function DroppableArea({ children }: { children: React.ReactNode }) {
 	);
 }
 
-const elementSchema = z.object({
+// const elementSchema = z.object({
+// 	id: z.string(),
+// 	type: z.enum(["input", "checkbox", "select"]),
+// 	label: z.string(),
+// 	value: z.any(),
+// });
+
+const stringSchema = z.object({
 	id: z.string(),
-	type: z.string(),
+	type: z.literal("input").or(z.literal("select")),
 	label: z.string(),
-	value: z.any(),
+	value: z.string(),
 });
 
-type ElementSchema = z.infer<typeof elementSchema>;
+const booleanSchema = z.object({
+	id: z.string(),
+	type: z.literal("checkbox"),
+	label: z.string(),
+	value: z.boolean(),
+});
 
+export type StringSchema = z.infer<typeof stringSchema>;
+export type BooleanSchema = z.infer<typeof booleanSchema>;
+
+const formElementSchema = z.union([stringSchema, booleanSchema]);
+
+type FormElementSchema = z.infer<typeof formElementSchema>;
+const schema = z.object({
+	elements: z.array(formElementSchema).default([]),
+});
+
+export type Schema = z.infer<typeof schema>;
+// type ElementSchema = z.infer<typeof elementSchema>;
+
+type FormElementType = "checkbox" | "select" | "input";
 interface DragElement {
-	item: ElementSchema;
+	item: FormElementSchema;
 	index: number;
 	origin: string;
-	type: string;
+	type: FormElementType;
 }
+
 
 export default function FormBuilder() {
 	const [activeItem, setActiveItem] = useState<DragElement | null>(null);
 	const [animateDuration, setAnimateDuration] = useState(0);
 
-	const schema = z.object({
-		elements: z.array(elementSchema).default([]),
-	});
+
 
 	const form = useForm({
 		resolver: zodResolver(schema),
@@ -419,7 +414,7 @@ export default function FormBuilder() {
 								<DraggableTemplateItem
 									item={field}
 									key={field.id}
-									control={templateForm.control}
+									control={templateForm.control as unknown as Control<Schema>}
 									index={index}
 									disabled
 								/>
@@ -441,7 +436,7 @@ export default function FormBuilder() {
 							key={activeItem.item.id}
 							item={activeItem.item}
 							index={activeItem.index}
-							control={templateForm.control}
+							control={templateForm.control as unknown as Control<Schema>}
 						/>
 					</Form>
 				) : null}

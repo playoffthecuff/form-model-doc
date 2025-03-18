@@ -24,19 +24,6 @@ interface CommonProps {
 	label: string;
 	disabled?: boolean;
 	description?: string;
-	control: Control<
-		{
-			elements: {
-				id: string;
-				type: string;
-				label: string;
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-				value?: any;
-			}[];
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		},
-		any
-	>;
 }
 
 interface CheckboxData {
@@ -47,8 +34,12 @@ interface InputData {
 	defaultValue?: string;
 }
 
-export interface CheckboxProps extends CommonProps, CheckboxData {}
-export interface InputProps extends CommonProps, InputData {}
+export interface CheckboxProps extends CommonProps, CheckboxData {
+	control: Control<BooleanSchema>
+}
+export interface InputProps extends CommonProps, InputData {
+	control: Control<StringSchema>
+}
 export type FormItemType = "checkbox" | "input" | "select";
 
 interface SelectData {
@@ -57,6 +48,7 @@ interface SelectData {
 }
 
 import { Path } from "react-hook-form";
+import { BooleanSchema, StringSchema } from "../draggables";
 
 interface FormValues {
 	elements: {
@@ -69,7 +61,9 @@ interface FormValues {
 	}[];
 }
 
-interface SelectProps extends CommonProps, SelectData {}
+interface SelectProps extends CommonProps, SelectData {
+	control: Control<StringSchema>;
+}
 
 export function SelectFormField({
 	options,
@@ -130,7 +124,7 @@ export function CheckboxFormField({
 				<FormItem className="flex flex-row p-2">
 					<FormControl>
 						<Checkbox
-							checked={field.value}
+							checked={field.value as unknown as boolean}
 							onCheckedChange={field.onChange}
 							disabled={disabled}
 							onChange={field.onChange}
