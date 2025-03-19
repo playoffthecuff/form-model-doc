@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as UnitsImport } from './routes/units'
 import { Route as TextImport } from './routes/text'
 import { Route as TestsImport } from './routes/tests'
 import { Route as FormImport } from './routes/form'
@@ -18,6 +19,12 @@ import { Route as ConstructorImport } from './routes/constructor'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const UnitsRoute = UnitsImport.update({
+  id: '/units',
+  path: '/units',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const TextRoute = TextImport.update({
   id: '/text',
@@ -88,6 +95,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TextImport
       parentRoute: typeof rootRoute
     }
+    '/units': {
+      id: '/units'
+      path: '/units'
+      fullPath: '/units'
+      preLoaderRoute: typeof UnitsImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -99,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/form': typeof FormRoute
   '/tests': typeof TestsRoute
   '/text': typeof TextRoute
+  '/units': typeof UnitsRoute
 }
 
 export interface FileRoutesByTo {
@@ -107,6 +122,7 @@ export interface FileRoutesByTo {
   '/form': typeof FormRoute
   '/tests': typeof TestsRoute
   '/text': typeof TextRoute
+  '/units': typeof UnitsRoute
 }
 
 export interface FileRoutesById {
@@ -116,14 +132,22 @@ export interface FileRoutesById {
   '/form': typeof FormRoute
   '/tests': typeof TestsRoute
   '/text': typeof TextRoute
+  '/units': typeof UnitsRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/constructor' | '/form' | '/tests' | '/text'
+  fullPaths: '/' | '/constructor' | '/form' | '/tests' | '/text' | '/units'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/constructor' | '/form' | '/tests' | '/text'
-  id: '__root__' | '/' | '/constructor' | '/form' | '/tests' | '/text'
+  to: '/' | '/constructor' | '/form' | '/tests' | '/text' | '/units'
+  id:
+    | '__root__'
+    | '/'
+    | '/constructor'
+    | '/form'
+    | '/tests'
+    | '/text'
+    | '/units'
   fileRoutesById: FileRoutesById
 }
 
@@ -133,6 +157,7 @@ export interface RootRouteChildren {
   FormRoute: typeof FormRoute
   TestsRoute: typeof TestsRoute
   TextRoute: typeof TextRoute
+  UnitsRoute: typeof UnitsRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -141,6 +166,7 @@ const rootRouteChildren: RootRouteChildren = {
   FormRoute: FormRoute,
   TestsRoute: TestsRoute,
   TextRoute: TextRoute,
+  UnitsRoute: UnitsRoute,
 }
 
 export const routeTree = rootRoute
@@ -157,7 +183,8 @@ export const routeTree = rootRoute
         "/constructor",
         "/form",
         "/tests",
-        "/text"
+        "/text",
+        "/units"
       ]
     },
     "/": {
@@ -174,6 +201,9 @@ export const routeTree = rootRoute
     },
     "/text": {
       "filePath": "text.tsx"
+    },
+    "/units": {
+      "filePath": "units.tsx"
     }
   }
 }

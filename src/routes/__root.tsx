@@ -53,6 +53,14 @@ function Root() {
           >
             Tests
           </Link>
+          <Link
+            to="/units"
+            activeProps={{
+              className: 'font-bold',
+            }}
+          >
+            Units
+          </Link>
           <ThemeToggler/>
         </div>
         <hr />
