@@ -119,8 +119,6 @@ export default function DndFormBuilder() {
     const { active, over } = event;
     const activeId = active.id;
 
-    console.log("Drag End →", { activeId, overId: over?.id, isOutside });
-
     // Удаление элемента при выносе за пределы
     if (isOutside || over?.id === "trash-zone") {
       setFormElements((prev) => prev.filter((item) => item.id !== activeId));

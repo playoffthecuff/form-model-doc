@@ -340,7 +340,6 @@ export default function FormBuilder() {
 		const { active, over } = event;
 		const activeId = active.id;
 		setAnimateDuration(200);
-		console.log(fields, activeId);
 		if (!over) return;
 
 		const isOverWorkspace = over.id === "droppable-area";

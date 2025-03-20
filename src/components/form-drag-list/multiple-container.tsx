@@ -157,7 +157,6 @@ export function MultipleContainers({
   scrollable,
 }: Props) {
   const [items, setItems] = useState<Items>(initialItems);
-  console.log(items)
   const [containers, setContainers] = useState(
     Object.keys(items) as UniqueIdentifier[]
   );
@@ -264,9 +263,6 @@ export function MultipleContainers({
       recentlyMovedToNewContainer.current = false;
     });
   }, [items]);
-  console.log("🚀 ~ items:", items)
-  console.log("🚀 ~ containers PLACEHOLDER_ID:", [...containers, PLACEHOLDER_ID])
-
 
   return (
     <DndContext

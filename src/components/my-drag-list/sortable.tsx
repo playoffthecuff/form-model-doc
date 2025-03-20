@@ -146,7 +146,6 @@ export function Sortable({
   const handleRemove = removable
     ? (id: UniqueIdentifier) =>
         {
-          console.log(items, id);
           setItems((items) => items.filter((item) => item !== id));
         }
     : undefined;
